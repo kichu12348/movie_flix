@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MovieFlix | Movie Library</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      :root {
+        --primary: #6366f1;
+        --primary-dark: #4f46e5;
+        --secondary: #ec4899;
+        --dark: #1e293b;
+        --light: #f8fafc;
+        --gray: #94a3b8;
+        --success: #10b981;
+        --danger: #ef4444;
+        --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        --text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        min-height: 100vh;
+        color: var(--light);
+        overflow-x: hidden;
+        position: relative;
+      }
+
+
+      *::-webkit-scrollbar {
+        width: 6px;
+      }
+
+        *::-webkit-scrollbar-thumb {
+            background-color: var(--primary);
+        }
+
+        *::-webkit-scrollbar-track {
+            background: var(--dark);
+        }
+
+        @media screen and (max-width: 768px) {
+            *::-webkit-scrollbar {
+                display: none;
+            }
+
+            *{
+                scrollbar-width: none; /* For Firefox */
+                -ms-overflow-style: none;  /* For Internet Explorer and Edge */
+            }
+        }
+
+      .background-shapes {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: -1;
+      }
+
+      .shape {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.1;
+      }
+
+      .shape-1 {
+        background: var(--primary);
+        width: 400px;
+        height: 400px;
+        top: 10%;
+        left: -10%;
+        animation: float 12s ease-in-out infinite;
+      }
+
+      .shape-2 {
+        background: var(--secondary);
+        width: 300px;
+        height: 300px;
+        top: 60%;
+        right: -5%;
+        animation: float 15s ease-in-out infinite reverse;
+      }
+
+      .shape-3 {
+        background: var(--success);
+        width: 200px;
+        height: 200px;
+        bottom: 20%;
+        left: 30%;
+        animation: float 18s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-30px) rotate(10deg);
+        }
+        100% {
+          transform: translateY(0) rotate(0deg);
+        }
+      }
+
+      .nav-container {
+        backdrop-filter: blur(10px);
+        background-color: rgba(15, 23, 42, 0.8);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav-logo {
+        display: flex;
+        align-items: center;
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1.75rem;
+        transition: all 0.2s;
+      }
+
+      .nav-logo:hover {
+        transform: scale(1.05);
+      }
+
+      .nav-logo i {
+        color: var(--secondary);
+        margin-right: 0.75rem;
+        font-size: 2rem;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .nav-link {
+        color: var(--gray);
+        text-decoration: none;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        transition: all 0.3s;
+      }
+
+      .nav-link:hover {
+        color: white;
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .nav-button {
+        background: linear-gradient(to right, var(--primary), var(--primary-dark));
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px -2px rgba(99, 102, 241, 0.3);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .main-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+      }
+
+      .page-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 0.5rem;
+        text-shadow: var(--text-shadow);
+      }
+
+      .page-subtitle {
+        color: var(--gray);
+        font-size: 1.125rem;
+      }
+
+      .content-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        align-items: start;
+      }
+
+      .card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        transition: all 0.3s;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      }
+
+      .card-header {
+        padding: 1.5rem 1.5rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: white;
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .card-icon {
+        color: var(--primary);
+        font-size: 1.125rem;
+      }
+
+      .card-description {
+        color: var(--gray);
+        font-size: 0.9rem;
+      }
+
+      .card-content {
+        padding: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.25rem;
+      }
+
+      .input-group {
+        display: flex;
+        align-items: center;
+        background-color: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        transition: all 0.3s;
+      }
+
+      .input-group:focus-within {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      }
+
+      .input-icon {
+        color: var(--gray);
+        font-size: 1rem;
+        padding: 0 0.75rem 0 1rem;
+      }
+
+      .form-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        padding: 0.85rem 1rem 0.85rem 0;
+        color: white;
+        font-size: 0.95rem;
+        outline: none;
+      }
+
+      .form-input::placeholder {
+        color: var(--gray);
+      }
+
+      .btn {
+        padding: 0.85rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .btn-primary {
+        background: linear-gradient(to right, var(--primary), var(--primary-dark));
+        color: white;
+        box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.2);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px -2px rgba(99, 102, 241, 0.3);
+      }
+
+      .movie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .movie-card {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .movie-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+      }
+
+      .movie-actions {
+        display: flex;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .movie-card:hover .movie-actions {
+        opacity: 1;
+      }
+
+      .btn-action {
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        padding: 0.5rem;
+        border-radius: 6px;
+        color: var(--gray);
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+      }
+
+      .btn-edit:hover {
+        background: rgba(99, 102, 241, 0.2);
+        color: var(--primary);
+      }
+
+      .btn-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--danger);
+      }
+
+      /* Modal Styles */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+      }
+
+      .modal.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal-content {
+        background: rgba(30, 41, 59, 0.95);
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        transform: translateY(50px);
+        transition: transform 0.3s;
+      }
+
+      .modal.active .modal-content {
+        transform: translateY(0);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .modal-close {
+        background: none;
+        border: none;
+        color: var(--gray);
+        font-size: 1.25rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        transition: color 0.2s;
+      }
+
+      .modal-close:hover {
+        color: white;
+      }
+
+      .modal-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        justify-content: flex-end;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--gray);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .btn-danger {
+        background: linear-gradient(to right, var(--danger), #dc2626);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 10px -2px rgba(239, 68, 68, 0.3);
+      }
+
+
+
+      .movie-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(to right, var(--primary), var(--secondary));
+      }
+
+      .movie-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        border-color: rgba(99, 102, 241, 0.3);
+      }
+
+      .movie-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: white;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 1;
+        min-width: 0;
+      }
+
+      .movie-genre {
+        color: var(--primary);
+        background: rgba(99, 102, 241, 0.1);
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        display: inline-block;
+        margin-bottom: 0.5rem;
+      }
+
+      .movie-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        margin-top: 0.75rem;
+      }
+
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+
+      .available {
+        background-color: var(--success);
+      }
+
+      .unavailable {
+        background-color: var(--danger);
+      }
+
+      .status-text {
+        color: var(--gray);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--gray);
+      }
+
+      .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: var(--primary);
+      }
+
+      .empty-state h3 {
+        color: white;
+        margin-bottom: 0.5rem;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 768px) {
+        .nav-container {
+          padding: 1rem;
+          flex-direction: column;
+          gap: 1rem;
+        }
+
+        .main-container {
+          padding: 1rem;
+        }
+
+        .page-title {
+          font-size: 2rem;
+        }
+
+        .content-grid {
+          grid-template-columns: 1fr;
+          gap: 1.5rem;
+        }
+
+        .movie-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .nav-logo {
+          font-size: 1.5rem;
+        }
+
+        .page-title {
+          font-size: 1.75rem;
+        }
+
+        .card-content {
+          padding: 1rem;
+        }
+
+        .movie-card {
+          padding: 1rem;
+        }
+      }
+    </style>
+</head>
+<body>
+    <div class="background-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <i class="fas fa-film"></i>
+        <span>MovieFlix</span>
+      </a>
+      <div class="nav-actions">
+        <a href="/auth" id="login-link" class="nav-link">Login / Register</a>
+        <button id="logout-button" class="nav-button hidden">Logout</button>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <div class="page-header">
+        <h1 class="page-title">Movie Library</h1>
+        <p class="page-subtitle">Discover and manage your favorite movies</p>
+      </div>
+
+      <div class="content-grid">
+        <div class="card" id="add-movie-section">
+          <div class="card-header">
+            <h2 class="card-title">
+              <i class="fas fa-plus card-icon"></i>
+              Add New Movie
+            </h2>
+            <p class="card-description">Add a new movie to your collection</p>
+          </div>
+          <div class="card-content">
+            <form id="add-movie-form">
+              <div class="form-group">
+                <div class="input-group">
+                  <i class="fas fa-film input-icon"></i>
+                  <input type="text" id="title" class="form-input" placeholder="Movie Title" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="input-group">
+                  <i class="fas fa-tags input-icon"></i>
+                  <input type="text" id="genre" class="form-input" placeholder="Genre (e.g., Action, Comedy)" required>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Add Movie
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">
+              <i class="fas fa-list card-icon"></i>
+              Available Movies
+            </h2>
+            <p class="card-description">Browse through your movie collection</p>
+          </div>
+          <div class="card-content">
+            <div id="movies" class="movie-grid">
+              <!-- Movies will be populated here -->
+            </div>
+            <div id="empty-state" class="empty-state hidden">
+              <i class="fas fa-film"></i>
+              <h3>No movies yet</h3>
+              <p>Start building your collection by adding your first movie!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Movie Modal -->
+    <div id="edit-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">
+            <i class="fas fa-edit card-icon"></i>
+            Edit Movie
+          </h2>
+          <button class="modal-close" onclick="closeEditModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <form id="edit-movie-form">
+          <input type="hidden" id="edit-movie-id">
+          <div class="form-group">
+            <div class="input-group">
+              <i class="fas fa-film input-icon"></i>
+              <input type="text" id="edit-title" class="form-input" placeholder="Movie Title" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="input-group">
+              <i class="fas fa-tags input-icon"></i>
+              <input type="text" id="edit-genre" class="form-input" placeholder="Genre" required>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fas fa-save"></i>
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title">
+            <i class="fas fa-trash card-icon" style="color: var(--danger);"></i>
+            Delete Movie
+          </h2>
+          <button class="modal-close" onclick="closeDeleteModal()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <p style="color: var(--gray); margin-bottom: 1.5rem;">
+          Are you sure you want to delete "<span id="delete-movie-title" style="color: white; font-weight: 600;"></span>"? 
+          This action cannot be undone.
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirm-delete-btn">
+            <i class="fas fa-trash"></i>
+            Delete Movie
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <script src="/app.js"></script>
+</body>
+</html>
