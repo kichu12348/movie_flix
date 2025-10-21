@@ -45,4 +45,83 @@ router.post('/add-movie', isAdmin, (req, res) => {
   );
 });
 
+// Edit movie page
+router.get('/edit-movie/:id', isAdmin, (req, res) => {
+  const movieId = req.params.id;
+
+  db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
+    if (err || !movie) {
+      return res.status(404).send('Movie not found');
+    }
+    res.render('admin_edit_movie', { movie });
+  });
+});
+
+// Edit movie POST
+router.post('/edit-movie/:id', isAdmin, (req, res) => {
+  const movieId = req.params.id;
+  const { title, genre, available_copies } = req.body;
+
+  if (!title || !genre || available_copies === undefined) {
+    return db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
+      res.render('admin_edit_movie', { 
+        movie: movie || { id: movieId, title, genre, available_copies },
+        error: 'All fields are required' 
+      });
+    });
+  }
+
+  const copies = parseInt(available_copies);
+  if (isNaN(copies) || copies < 0) {
+    return db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
+      res.render('admin_edit_movie', { 
+        movie: movie || { id: movieId, title, genre, available_copies },
+        error: 'Available copies must be a valid non-negative number' 
+      });
+    });
+  }
+
+  db.run(
+    'UPDATE movies SET title = ?, genre = ?, available_copies = ? WHERE id = ?',
+    [title, genre, copies, movieId],
+    (err) => {
+      if (err) {
+        return db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
+          res.render('admin_edit_movie', { 
+            movie: movie || { id: movieId, title, genre, available_copies },
+            error: 'Error updating movie' 
+          });
+        });
+      }
+      res.redirect('/admin/dashboard');
+    }
+  );
+});
+
+// Delete movie with cascade
+router.post('/delete-movie/:id', isAdmin, (req, res) => {
+  const movieId = req.params.id;
+
+  db.run('BEGIN TRANSACTION');
+
+  // First delete all associated rentals
+  db.run('DELETE FROM rentals WHERE movie_id = ?', [movieId], (err) => {
+    if (err) {
+      db.run('ROLLBACK');
+      return res.status(500).send('Error deleting associated rentals');
+    }
+
+    // Then delete the movie
+    db.run('DELETE FROM movies WHERE id = ?', [movieId], (err) => {
+      if (err) {
+        db.run('ROLLBACK');
+        return res.status(500).send('Error deleting movie');
+      }
+
+      db.run('COMMIT');
+      res.redirect('/admin/dashboard');
+    });
+  });
+});
+
 module.exports = router;
