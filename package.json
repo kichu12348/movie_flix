@@ -1,21 +1,28 @@
 {
-  "name": "movie_rental",
+  "name": "movie-rental-system",
   "version": "1.0.0",
-  "description": "",
+  "description": "A complete movie rental system with Node.js, Express, and SQLite",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch --env-file=.env index.js"
+    "dev": "nodemon index.js"
   },
-  "keywords": [],
+  "keywords": [
+    "movie",
+    "rental",
+    "express",
+    "sqlite"
+  ],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "sqlite3": "^5.1.7"
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "ejs": "^3.1.9",
+    "sqlite3": "^5.1.6",
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
   }
 }

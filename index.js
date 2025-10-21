@@ -1,42 +1,60 @@
-const express = require("express");
-const cors = require("cors");
-const path = require("path");
+const express = require('express');
+const session = require('express-session');
+const path = require('path');
+const { db, initializeDatabase } = require('./database');
 
-const movieRoutes = require("./src/routes/movieRoutes");
-const authRoutes = require("./src/routes/authRoutes");
+const authRoutes = require('./routes/auth');
+const movieRoutes = require('./routes/movies');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Middleware
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(session({
+  secret: 'movie-rental-secret-key-2024',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+}));
 
-app.use(express.static(path.join(__dirname, 'frontend',"public")));
+// Set view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
-
-app.use("/api/movies", movieRoutes);
-app.use("/api/auth", authRoutes);
-
-app.get("/auth", (_, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "auth.html"));
+// Make user available in all views
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
 });
 
-app.get("/health", (_, res) => {
-  res.json({ message: "i am alibeeeeee muahahahahahahahah!!!" });
+// Routes
+app.use('/', authRoutes);
+app.use('/', movieRoutes);
+app.use('/admin', adminRoutes);
+
+// Home route
+app.get('/', (req, res) => {
+  if (req.session.user) {
+    if (req.session.user.role === 'admin') {
+      return res.redirect('/admin/dashboard');
+    }
+    return res.redirect('/movies');
+  }
+  res.render('index');
 });
 
-app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "frontend", "movies.html"));
-});
-
-app.get("/movies", (req, res) => {
-    res.redirect("/");
-});
-
-app.get("/auth/user", (req, res) => {
-    res.redirect("/auth");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server started on http://localhost:${PORT}`);
-});
+// Initialize database and start server
+initializeDatabase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`✓ Server running on http://localhost:${PORT}`);
+      console.log(`✓ Database initialized successfully`);
+    });
+  })
+  .catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
+  });

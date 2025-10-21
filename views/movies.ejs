@@ -1,0 +1,40 @@
+<%- include('partials/header') %>
+
+<div class="max-w-6xl mx-auto">
+  <h2 class="text-3xl font-bold mb-6 text-gray-800">Available Movies</h2>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <% movies.forEach(movie => { %>
+      <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-xl transition duration-200">
+        <h3 class="text-xl font-bold mb-2 text-gray-800"><%= movie.title %></h3>
+        <p class="text-gray-600 mb-2"><strong>Genre:</strong> <%= movie.genre %></p>
+        <p class="text-gray-600 mb-4">
+          <strong>Available:</strong> 
+          <span class="<%= movie.available_copies > 0 ? 'text-green-600' : 'text-red-600' %>">
+            <%= movie.available_copies %> copies
+          </span>
+        </p>
+        
+        <% if (movie.available_copies > 0) { %>
+          <form method="POST" action="/rent/<%= movie.id %>">
+            <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
+              Rent Movie
+            </button>
+          </form>
+        <% } else { %>
+          <button disabled class="w-full bg-gray-400 text-white font-bold py-2 px-4 rounded-lg cursor-not-allowed">
+            Out of Stock
+          </button>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+
+  <% if (movies.length === 0) { %>
+    <div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+      No movies available at the moment.
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

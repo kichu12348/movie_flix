@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Movie Rental System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-500 to-purple-600 min-h-screen flex items-center justify-center">
+  <div class="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+    <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">🎬 Movie Rental</h1>
+    
+    <% if (locals.error) { %>
+      <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <div class="mb-6">
+      <div class="flex border-b">
+        <button onclick="showLogin()" id="loginTab" class="flex-1 py-2 text-center font-semibold border-b-2 border-blue-600 text-blue-600">Login</button>
+        <button onclick="showRegister()" id="registerTab" class="flex-1 py-2 text-center font-semibold text-gray-500">Register</button>
+      </div>
+    </div>
+
+    <!-- Login Form -->
+    <form id="loginForm" method="POST" action="/login">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+        <input type="text" name="username" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+        <input type="password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">Login</button>
+    </form>
+
+    <!-- Register Form -->
+    <form id="registerForm" method="POST" action="/register" class="hidden">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+        <input type="text" name="username" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="mb-6">
+        <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+        <input type="password" name="password" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition duration-200">Register</button>
+    </form>
+
+    <div class="mt-6 text-center text-sm text-gray-600">
+      <p>Admin Login: <strong>admin / admin</strong></p>
+    </div>
+  </div>
+
+  <script>
+    function showLogin() {
+      document.getElementById('loginForm').classList.remove('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('loginTab').classList.add('border-blue-600', 'text-blue-600');
+      document.getElementById('loginTab').classList.remove('text-gray-500');
+      document.getElementById('registerTab').classList.remove('border-blue-600', 'text-blue-600');
+      document.getElementById('registerTab').classList.add('text-gray-500');
+    }
+
+    function showRegister() {
+      document.getElementById('registerForm').classList.remove('hidden');
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerTab').classList.add('border-blue-600', 'text-blue-600');
+      document.getElementById('registerTab').classList.remove('text-gray-500');
+      document.getElementById('loginTab').classList.remove('border-blue-600', 'text-blue-600');
+      document.getElementById('loginTab').classList.add('text-gray-500');
+    }
+  </script>
+</body>
+</html>

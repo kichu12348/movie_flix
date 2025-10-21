@@ -1,0 +1,45 @@
+<%- include('partials/header') %>
+
+<div class="max-w-6xl mx-auto">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-3xl font-bold text-gray-800">Admin Dashboard</h2>
+    <a href="/admin/add-movie" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+      + Add New Movie
+    </a>
+  </div>
+
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ID</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Title</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Genre</th>
+          <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Available Copies</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+        <% movies.forEach(movie => { %>
+          <tr>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"><%= movie.id %></td>
+            <td class="px-6 py-4 whitespace-nowrap font-semibold"><%= movie.title %></td>
+            <td class="px-6 py-4 whitespace-nowrap"><%= movie.genre %></td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full <%= movie.available_copies > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+                <%= movie.available_copies %> / 5
+              </span>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if (movies.length === 0) { %>
+    <div class="mt-4 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+      No movies in the system. Click "Add New Movie" to get started.
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>
