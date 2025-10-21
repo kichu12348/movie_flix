@@ -1,9 +1,5 @@
-const sqlite3 = require('sqlite3').verbose();
+const db = require('./connection');
 const bcrypt = require('bcryptjs');
-const path = require('path');
-
-const dbPath = path.join(__dirname, 'movie_rental.db');
-const db = new sqlite3.Database(dbPath);
 
 // Initialize database tables and seed data
 const initializeDatabase = () => {
