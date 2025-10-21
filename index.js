@@ -1,7 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const { db, initializeDatabase } = require('./database');
+const { pool, initializeDatabase } = require('./database');
 
 const authRoutes = require('./routes/auth');
 const movieRoutes = require('./routes/movies');
@@ -49,9 +49,24 @@ app.get('/', (req, res) => {
 // Initialize database and start server
 initializeDatabase()
   .then(() => {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`✓ Server running on http://localhost:${PORT}`);
       console.log(`✓ Database initialized successfully`);
+    });
+
+    // Graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log('\nShutting down server...');
+      server.close(async () => {
+        console.log('Server shut down.');
+        try {
+          await pool.end();
+          console.log('Database connection closed.');
+        } catch (err) {
+          console.error('Error closing database connection:', err.message);
+        }
+        process.exit(0);
+      });
     });
   })
   .catch(err => {

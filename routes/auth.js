@@ -1,10 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { db } = require('../database');
+const { pool } = require('../database');
 const router = express.Router();
 
 // Register
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
@@ -13,34 +13,36 @@ router.post('/register', (req, res) => {
 
   const hashedPassword = bcrypt.hashSync(password, 10);
 
-  db.run(
-    'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-    [username, hashedPassword, 'user'],
-    function(err) {
-      if (err) {
-        return res.render('index', { error: 'Username already exists' });
-      }
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+      [username, hashedPassword, 'user']
+    );
 
-      req.session.user = {
-        id: this.lastID,
-        username: username,
-        role: 'user'
-      };
-      res.redirect('/movies');
-    }
-  );
+    req.session.user = {
+      id: result.insertId,
+      username: username,
+      role: 'user'
+    };
+    res.redirect('/movies');
+  } catch (err) {
+    return res.render('index', { error: 'Username already exists' });
+  }
 });
 
 // Login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
     return res.render('index', { error: 'Username and password are required' });
   }
 
-  db.get('SELECT * FROM users WHERE username = ?', [username], (err, user) => {
-    if (err || !user) {
+  try {
+    const [users] = await pool.query('SELECT * FROM users WHERE username = ?', [username]);
+    const user = users[0];
+
+    if (!user) {
       return res.render('index', { error: 'Invalid username or password' });
     }
 
@@ -59,7 +61,9 @@ router.post('/login', (req, res) => {
     } else {
       res.redirect('/movies');
     }
-  });
+  } catch (err) {
+    return res.render('index', { error: 'Invalid username or password' });
+  }
 });
 
 // Logout

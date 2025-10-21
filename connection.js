@@ -1,7 +1,15 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+// connection.js
+const mysql = require("mysql2/promise");
 
-const dbPath = path.join(__dirname, 'movie_rental.db');
-const db = new sqlite3.Database(dbPath);
+// Create MySQL connection pool
+const pool = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-module.exports = db;
+module.exports = pool;

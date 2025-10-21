@@ -1,5 +1,5 @@
 const express = require('express');
-const { db } = require('../database');
+const { pool } = require('../database');
 const router = express.Router();
 
 // Middleware to check if user is admin
@@ -11,13 +11,13 @@ const isAdmin = (req, res, next) => {
 };
 
 // Admin dashboard
-router.get('/dashboard', isAdmin, (req, res) => {
-  db.all('SELECT * FROM movies ORDER BY title', (err, movies) => {
-    if (err) {
-      return res.status(500).send('Database error');
-    }
+router.get('/dashboard', isAdmin, async (req, res) => {
+  try {
+    const [movies] = await pool.query('SELECT * FROM movies ORDER BY title');
     res.render('admin_dashboard', { movies });
-  });
+  } catch (err) {
+    return res.status(500).send('Database error');
+  }
 });
 
 // Add movie page
@@ -26,102 +26,100 @@ router.get('/add-movie', isAdmin, (req, res) => {
 });
 
 // Add movie POST
-router.post('/add-movie', isAdmin, (req, res) => {
+router.post('/add-movie', isAdmin, async (req, res) => {
   const { title, genre } = req.body;
 
   if (!title || !genre) {
     return res.render('admin_add_movie', { error: 'Title and genre are required' });
   }
 
-  db.run(
-    'INSERT INTO movies (title, genre, available_copies) VALUES (?, ?, ?)',
-    [title, genre, 5],
-    (err) => {
-      if (err) {
-        return res.render('admin_add_movie', { error: 'Error adding movie' });
-      }
-      res.redirect('/admin/dashboard');
-    }
-  );
+  try {
+    await pool.query(
+      'INSERT INTO movies (title, genre, available_copies) VALUES (?, ?, ?)',
+      [title, genre, 5]
+    );
+    res.redirect('/admin/dashboard');
+  } catch (err) {
+    return res.render('admin_add_movie', { error: 'Error adding movie' });
+  }
 });
 
 // Edit movie page
-router.get('/edit-movie/:id', isAdmin, (req, res) => {
+router.get('/edit-movie/:id', isAdmin, async (req, res) => {
   const movieId = req.params.id;
 
-  db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
-    if (err || !movie) {
+  try {
+    const [movies] = await pool.query('SELECT * FROM movies WHERE id = ?', [movieId]);
+    const movie = movies[0];
+
+    if (!movie) {
       return res.status(404).send('Movie not found');
     }
     res.render('admin_edit_movie', { movie });
-  });
+  } catch (err) {
+    return res.status(404).send('Movie not found');
+  }
 });
 
 // Edit movie POST
-router.post('/edit-movie/:id', isAdmin, (req, res) => {
+router.post('/edit-movie/:id', isAdmin, async (req, res) => {
   const movieId = req.params.id;
   const { title, genre, available_copies } = req.body;
 
   if (!title || !genre || available_copies === undefined) {
-    return db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
-      res.render('admin_edit_movie', { 
-        movie: movie || { id: movieId, title, genre, available_copies },
-        error: 'All fields are required' 
-      });
+    const [movies] = await pool.query('SELECT * FROM movies WHERE id = ?', [movieId]);
+    return res.render('admin_edit_movie', { 
+      movie: movies[0] || { id: movieId, title, genre, available_copies },
+      error: 'All fields are required' 
     });
   }
 
   const copies = parseInt(available_copies);
   if (isNaN(copies) || copies < 0) {
-    return db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
-      res.render('admin_edit_movie', { 
-        movie: movie || { id: movieId, title, genre, available_copies },
-        error: 'Available copies must be a valid non-negative number' 
-      });
+    const [movies] = await pool.query('SELECT * FROM movies WHERE id = ?', [movieId]);
+    return res.render('admin_edit_movie', { 
+      movie: movies[0] || { id: movieId, title, genre, available_copies },
+      error: 'Available copies must be a valid non-negative number' 
     });
   }
 
-  db.run(
-    'UPDATE movies SET title = ?, genre = ?, available_copies = ? WHERE id = ?',
-    [title, genre, copies, movieId],
-    (err) => {
-      if (err) {
-        return db.get('SELECT * FROM movies WHERE id = ?', [movieId], (err, movie) => {
-          res.render('admin_edit_movie', { 
-            movie: movie || { id: movieId, title, genre, available_copies },
-            error: 'Error updating movie' 
-          });
-        });
-      }
-      res.redirect('/admin/dashboard');
-    }
-  );
+  try {
+    await pool.query(
+      'UPDATE movies SET title = ?, genre = ?, available_copies = ? WHERE id = ?',
+      [title, genre, copies, movieId]
+    );
+    res.redirect('/admin/dashboard');
+  } catch (err) {
+    const [movies] = await pool.query('SELECT * FROM movies WHERE id = ?', [movieId]);
+    res.render('admin_edit_movie', { 
+      movie: movies[0] || { id: movieId, title, genre, available_copies },
+      error: 'Error updating movie' 
+    });
+  }
 });
 
 // Delete movie with cascade
-router.post('/delete-movie/:id', isAdmin, (req, res) => {
+router.post('/delete-movie/:id', isAdmin, async (req, res) => {
   const movieId = req.params.id;
+  const connection = await pool.getConnection();
 
-  db.run('BEGIN TRANSACTION');
+  try {
+    await connection.beginTransaction();
 
-  // First delete all associated rentals
-  db.run('DELETE FROM rentals WHERE movie_id = ?', [movieId], (err) => {
-    if (err) {
-      db.run('ROLLBACK');
-      return res.status(500).send('Error deleting associated rentals');
-    }
+    // First delete all associated rentals
+    await connection.query('DELETE FROM rentals WHERE movie_id = ?', [movieId]);
 
     // Then delete the movie
-    db.run('DELETE FROM movies WHERE id = ?', [movieId], (err) => {
-      if (err) {
-        db.run('ROLLBACK');
-        return res.status(500).send('Error deleting movie');
-      }
+    await connection.query('DELETE FROM movies WHERE id = ?', [movieId]);
 
-      db.run('COMMIT');
-      res.redirect('/admin/dashboard');
-    });
-  });
+    await connection.commit();
+    connection.release();
+    res.redirect('/admin/dashboard');
+  } catch (err) {
+    await connection.rollback();
+    connection.release();
+    return res.status(500).send('Error deleting movie');
+  }
 });
 
 module.exports = router;
